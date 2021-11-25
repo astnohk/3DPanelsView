@@ -2,8 +2,6 @@
 
 window.addEventListener("load", init);
 
-const scene = new THREE.Scene();
-
 const g_fovy = Math.PI * 70.0 / 180.0;
 let g_aspect;
 const g_near = 0.1;
