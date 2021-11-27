@@ -2,20 +2,23 @@
 
 window.addEventListener("load", init);
 
-const g_fovy = Math.PI * 70.0 / 180.0;
+const g_fovy = Math.PI * 90.0 / 180.0;
 let g_aspect;
 const g_near = 0.1;
 const g_far = 1000.0;
 
 let rotx = 0.0;
+let roty = 0.0;
 
 var cameraPosition = [ 0.0, 0.0, 5.0, 0.0 ];
 
+const display_texture_resolution = 1024;
 const display0_positions = [
-	-1.0, -0.5, 0.0, 1.0,
-	 1.0, -0.5, 0.0, 1.0,
-	 1.0,  0.5, 0.0, 1.0,
-	-1.0,  0.5, 0.0, 1.0];
+	-1.0, -0.6, 0.0, 1.0,
+	 1.0, -0.6, 0.0, 1.0,
+	 1.0,  0.6, 0.0, 1.0,
+	-1.0,  0.6, 0.0, 1.0];
+
 
 
 
@@ -75,12 +78,25 @@ function init()
 	const gl = canvas.getContext("webgl2", { antialias: false });
 	const programInfo = initializeWebGL(gl, vs, fs);
 
+	canvas.addEventListener("mousemove", (e) => {
+		roty = 2.0 * e.x / window.innerWidth - 1.0;
+		cameraPosition[2] = 2.0 + (1.0 - e.y / window.innerHeight) * 10.0;
+	});
+	canvas.addEventListener("touchmove", (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		roty = 2.0 * e.touches[0].screenX / window.innerWidth - 1.0;
+		cameraPosition[2] = 2.0 + (1.0 - e.touches[0].screenY / window.innerHeight) * 10.0;
+	});
+
 	// Initialize displays
 	//// Create projected displays
 	const canvas_display0 = document.getElementById("canvas_display0");
 	const display0 = init_projection(canvas_display0, display0_positions);
+	canvas_display0.style.width = "320px";
+	canvas_display0.style.height = (320 * (display0_positions[13] - display0_positions[1]) / (display0_positions[4] - display0_positions[0])) + "px";
 
-	//// Create display panel
+	//// Create display panel on The Main View
 	const panel0 = createPanel(gl, display0);
 
 	// Start animation
@@ -89,9 +105,10 @@ function init()
 			requestAnimationFrame(sub);
 			// Draw displays
 			rotx += 0.01;
-			const roty = Math.sin(rotx);
-			const iMat = createIdenticalMat4();
-			const modelMat = createRotationMat4_y(Math.PI * 45.0 / 180.0 * roty);
+			//const iMat = createIdenticalMat4();
+			const iMat = createRotationMat4_z(rotx * 0.3 * Math.PI);
+			const modelMat = createRotationMat4_y(Math.PI * 186.0 / 180.0 * roty);
+			iMat[14] = 3.0;
 			multiplyMat4(display0.modelMat, modelMat, iMat);
 			render_projection(display0.gl, display0.programInfo, display0.objects, display0.positions, display0.modelMat);
 			// Draw main view
@@ -175,7 +192,7 @@ function render(gl, programInfo, objects)
 
 	// Get matrix
 	const viewMat = createIdenticalMat4();
-	viewMat[14] = -3.0;
+	viewMat[14] = -cameraPosition[2];
 	const projection = createPerspectiveMat4(g_fovy, g_aspect, g_near, g_far);
 
 	const drawing = (attribLocation, element) => {
