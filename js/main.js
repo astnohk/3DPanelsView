@@ -19,15 +19,6 @@ const display0_positions = [
 	 1.0,  0.6, 0.0, 1.0,
 	-1.0,  0.6, 0.0, 1.0];
 
-window.addEventListener("mousemove", (e) => {
-	roty = 2.0 * e.x / window.innerWidth - 1.0;
-	cameraPosition[2] = 2.0 + (1.0 - e.y / window.innerHeight) * 10.0;
-});
-window.addEventListener("touchmove", (e) => {
-	e.preventDefault();
-	roty = 2.0 * e.touches[0].screenX / window.innerWidth - 1.0;
-	cameraPosition[2] = 2.0 + (1.0 - e.touches[0].screenY / window.innerHeight) * 10.0;
-});
 
 
 
@@ -86,6 +77,17 @@ function init()
 	//// Initialize WebGL context
 	const gl = canvas.getContext("webgl2", { antialias: false });
 	const programInfo = initializeWebGL(gl, vs, fs);
+
+	canvas.addEventListener("mousemove", (e) => {
+		roty = 2.0 * e.x / window.innerWidth - 1.0;
+		cameraPosition[2] = 2.0 + (1.0 - e.y / window.innerHeight) * 10.0;
+	});
+	canvas.addEventListener("touchmove", (e) => {
+		e.stopPropagation();
+		e.preventDefault();
+		roty = 2.0 * e.touches[0].screenX / window.innerWidth - 1.0;
+		cameraPosition[2] = 2.0 + (1.0 - e.touches[0].screenY / window.innerHeight) * 10.0;
+	});
 
 	// Initialize displays
 	//// Create projected displays
