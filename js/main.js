@@ -24,7 +24,7 @@ window.addEventListener("mousemove", (e) => {
 	cameraPosition[2] = 2.0 + (1.0 - e.y / window.innerHeight) * 10.0;
 });
 window.addEventListener("touchmove", (e) => {
-	console.log(e);
+	e.preventDefault();
 	roty = 2.0 * e.touches[0].screenX / window.innerWidth - 1.0;
 	cameraPosition[2] = 2.0 + (1.0 - e.touches[0].screenY / window.innerHeight) * 10.0;
 });
