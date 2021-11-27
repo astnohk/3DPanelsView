@@ -85,16 +85,28 @@ function init_projection(canvas, positions)
 	const gl = canvas.getContext("webgl2", { antialias: false });
 	const programInfo = initializeWebGL_projection(gl, vs_projection, fs_projection);
 
-	const cube = createCube(gl);
-	const modelMat = createIdenticalMat4();
+	let cubes = [];
+	for (let i = 0; i < 15; ++i) {
+		const cube = createCube(gl);
+		cube.modelMat[0] = cube.modelMat[5] = cube.modelMat[10] = Math.random();
+		let rot;
+		rot = createRotationMat4_z(Math.random() * Math.PI * 2.0);
+		multiplyMat4(cube.modelMat, rot, cube.modelMat);
+		rot = createRotationMat4_x(Math.random() * Math.PI * 2.0);
+		multiplyMat4(cube.modelMat, rot, cube.modelMat);
+		cube.modelMat[12] = 4.0 * (Math.random() - 0.5);
+		cube.modelMat[13] = 4.0 * (Math.random() - 0.5);
+		cube.modelMat[14] = 4.0 * (Math.random() - 0.5);
+		cubes.push(cube);
+	}
 
 	return {
 		canvas: canvas,
 		gl: gl,
 		positions: positions,
-		modelMat: modelMat,
+		modelMat: createIdenticalMat4(),
 		programInfo: programInfo,
-		objects: [ cube ],
+		objects: cubes,
 	};
 }
 
@@ -136,14 +148,6 @@ function render_projection(gl, programInfo, objects, display_positions, display_
 	gl.depthFunc(gl.LEQUAL);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	// Get matrix
-	const modelMat = createIdenticalMat4();
-	modelMat[14] = -3.0;
-	const rotXMat = createRotationMat4_x(rotx);
-	const rotYMat = createRotationMat4_y(Math.PI * 0.1);
-	multiplyMat4(rotYMat, rotYMat, rotXMat);
-	multiplyMat4(modelMat, modelMat, rotYMat);
-
 	const world = createIdenticalMat4();
 
 	const drawing = (attribLocation, element) => {
@@ -166,10 +170,6 @@ function render_projection(gl, programInfo, objects, display_positions, display_
 	    programInfo.uniformLocations.cameraPosition,
 	    cameraPosition);
 	gl.uniformMatrix4fv(
-	    programInfo.uniformLocations.modelMatrix,
-	    false,
-	    modelMat);
-	gl.uniformMatrix4fv(
 	    programInfo.uniformLocations.displayPositions,
 	    false,
 	    display_positions);
@@ -183,6 +183,17 @@ function render_projection(gl, programInfo, objects, display_positions, display_
 	    world);
 
 	objects.forEach((object) => {
+		const modelMat = createIdenticalMat4();
+		modelMat[14] = -3.0;
+		const rotXMat = createRotationMat4_x(rotx);
+		const rotYMat = createRotationMat4_y(Math.PI * 0.1);
+		multiplyMat4(rotYMat, rotYMat, rotXMat);
+		multiplyMat4(modelMat, object.modelMat, rotYMat);
+		gl.uniformMatrix4fv(
+		    programInfo.uniformLocations.modelMatrix,
+		    false,
+		    modelMat);
+
 		drawing(programInfo.attribLocations.vertexPosition, object.position);
 		drawing(programInfo.attribLocations.vertexColor, object.color);
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, object.index.buffer);
@@ -298,6 +309,7 @@ function createCube(gl)
 		position: { elements: pos, buffer: positionBuffer, type: gl.FLOAT, numComponents: 3, normalize: false },
 		color: { elements: col, buffer: colorBuffer, type: gl.FLOAT, numComponents: 4, normalize: false },
 		index: { elements: index, buffer: indexBuffer, type: gl.UNSIGNED_SHORT },
+		modelMat: createIdenticalMat4(),
 	};
 }
 

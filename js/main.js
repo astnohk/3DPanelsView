@@ -2,7 +2,7 @@
 
 window.addEventListener("load", init);
 
-const g_fovy = Math.PI * 60.0 / 180.0;
+const g_fovy = Math.PI * 90.0 / 180.0;
 let g_aspect;
 const g_near = 0.1;
 const g_far = 1000.0;
@@ -105,7 +105,8 @@ function init()
 			requestAnimationFrame(sub);
 			// Draw displays
 			rotx += 0.01;
-			const iMat = createIdenticalMat4();
+			//const iMat = createIdenticalMat4();
+			const iMat = createRotationMat4_z(rotx * 0.3 * Math.PI);
 			const modelMat = createRotationMat4_y(Math.PI * 186.0 / 180.0 * roty);
 			iMat[14] = 3.0;
 			multiplyMat4(display0.modelMat, modelMat, iMat);
