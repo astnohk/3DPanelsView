@@ -76,37 +76,60 @@ void main(void) {
 ////////////////////////////////////////////////////////////////
 // main
 ////////////////////////////////////////////////////////////////
-function init_projection(canvas, positions)
+function init_projection(gl, programInfo, canvas, positions)
 {
 	// Create canvas
 	canvas.width = display_texture_resolution;
 	canvas.height = display_texture_resolution;
 
-	const gl = canvas.getContext("webgl2", { antialias: false });
-	const programInfo = initializeWebGL_projection(gl, vs_projection, fs_projection);
-
-	let cubes = [];
-	for (let i = 0; i < 15; ++i) {
-		const cube = createCube(gl);
-		cube.modelMat[0] = cube.modelMat[5] = cube.modelMat[10] = Math.random();
-		let rot;
-		rot = createRotationMat4_z(Math.random() * Math.PI * 2.0);
-		multiplyMat4(cube.modelMat, rot, cube.modelMat);
-		rot = createRotationMat4_x(Math.random() * Math.PI * 2.0);
-		multiplyMat4(cube.modelMat, rot, cube.modelMat);
-		cube.modelMat[12] = 4.0 * (Math.random() - 0.5);
-		cube.modelMat[13] = 4.0 * (Math.random() - 0.5);
-		cube.modelMat[14] = 4.0 * (Math.random() - 0.5);
-		cubes.push(cube);
+	// Create the target color buffer
+	const targetTexture = gl.createTexture();
+	const textureLevel = 0;
+	{
+		const internalFormat = gl.RGBA;
+		const border = 0;
+		const format = gl.RGBA;
+		const type = gl.UNSIGNED_BYTE;
+		const data = null;
+		gl.bindTexture(gl.TEXTURE_2D, targetTexture);
+		gl.texImage2D(
+		    gl.TEXTURE_2D, textureLevel, internalFormat,
+		    display_texture_resolution, display_texture_resolution,
+		    border, format, type, data);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 	}
+
+	// Create the target depth buffer
+	const targetDepth = gl.createRenderbuffer();
+	gl.bindRenderbuffer(gl.RENDERBUFFER, targetDepth);
+	{
+		const format = gl.DEPTH_COMPONENT16;
+		gl.renderbufferStorage(
+		    gl.RENDERBUFFER, format,
+		    display_texture_resolution, display_texture_resolution);
+	}
+
+	// Create the frame buffer
+	const frameBuffer = gl.createFramebuffer();
+	gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
+
+	// Attach buffers to the frame buffer
+	const attachmentPointDepth = gl.DEPTH_ATTACHMENT;
+	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPointDepth, gl.RENDERBUFFER, targetDepth);
+	const attachmentPointColor = gl.COLOR_ATTACHMENT0;
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPointColor, gl.TEXTURE_2D, targetTexture, textureLevel);
 
 	return {
 		canvas: canvas,
-		gl: gl,
 		positions: positions,
+		frameBuffer: frameBuffer,
+		colorBuffer: targetTexture,
+		depthBuffer: targetDepth,
+		attachmentPointColor: attachmentPointColor,
+		attachmentPointDepth: attachmentPointDepth,
 		modelMat: createIdenticalMat4(),
-		programInfo: programInfo,
-		objects: cubes,
 	};
 }
 
@@ -139,12 +162,21 @@ function initializeWebGL_projection(gl, vsSource, fsSource) {
 }
 
 
-function render_projection(gl, programInfo, objects, display_positions, display_modelMat)
+function render_projection(gl, programInfo, display, objects)
 {
+	gl.useProgram(programInfo.shaderProgram);
+
+	gl.enable(gl.DEPTH_TEST);
+
+	// Render buffer
+	gl.bindFramebuffer(gl.FRAMEBUFFER, display.frameBuffer);
+	gl.bindTexture(gl.TEXTURE_2D, display.colorBuffer);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, display.depthBuffer);
+	gl.viewport(0, 0, display_texture_resolution, display_texture_resolution);
+
 	// Clear
 	gl.clearColor(0.1, 0.1, 0.0, 1.0);
 	gl.clearDepth(1.0);
-	gl.enable(gl.DEPTH_TEST);
 	gl.depthFunc(gl.LEQUAL);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -164,19 +196,17 @@ function render_projection(gl, programInfo, objects, display_positions, display_
 		gl.enableVertexAttribArray(attribLocation);
 	};
 
-	gl.useProgram(programInfo.shaderProgram);
-
 	gl.uniform4fv(
 	    programInfo.uniformLocations.cameraPosition,
 	    cameraPosition);
 	gl.uniformMatrix4fv(
 	    programInfo.uniformLocations.displayPositions,
 	    false,
-	    display_positions);
+	    display.positions);
 	gl.uniformMatrix4fv(
 	    programInfo.uniformLocations.displayModelMatrix,
 	    false,
-	    display_modelMat);
+	    display.modelMat);
 	gl.uniformMatrix4fv(
 	    programInfo.uniformLocations.worldMatrix,
 	    false,
@@ -184,7 +214,6 @@ function render_projection(gl, programInfo, objects, display_positions, display_
 
 	objects.forEach((object) => {
 		const modelMat = createIdenticalMat4();
-		modelMat[14] = -3.0;
 		const rotXMat = createRotationMat4_x(rotx);
 		const rotYMat = createRotationMat4_y(Math.PI * 0.1);
 		multiplyMat4(rotYMat, rotYMat, rotXMat);
