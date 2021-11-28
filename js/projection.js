@@ -85,6 +85,7 @@ function init_projection(gl, programInfo, canvas, positions)
 	// Create canvas
 	canvas.width = display_texture_resolution;
 	canvas.height = display_texture_resolution;
+	const ctx = canvas.getContext("2d");
 
 	// Create the target color buffer
 	const targetTexture = gl.createTexture();
@@ -127,6 +128,7 @@ function init_projection(gl, programInfo, canvas, positions)
 
 	return {
 		canvas: canvas,
+		context: ctx,
 		positions: positions,
 		frameBuffer: frameBuffer,
 		colorBuffer: targetTexture,

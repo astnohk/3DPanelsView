@@ -84,11 +84,14 @@ function init()
 
 	// Initialize displays
 	//// Create projected displays
+	const canvas_displays = document.getElementById("canvas_displays");
 	let displays = [];
 	let panels = [];
 	for (let i = 0; i < display_positions.length; ++i) {
 		const canvas_display = document.createElement("canvas");
 		canvas_display.id = "canvas_display" + i;
+		canvas_displays.appendChild(canvas_display);
+
 		const display = init_projection(gl, programInfo_display, canvas_display, display_positions[i]);
 		canvas_display.style.width = "320px";
 		const normX = Math.sqrt(
@@ -120,6 +123,14 @@ function init()
 			for (let i = 0; i < display_positions.length; ++i) {
 				multiplyMat4(displays[i].modelMat, modelMat, iMat);
 				render_projection(gl, programInfo_display, displays[i], cubes);
+
+				// Draw the display on each canvas by copying the pixel data via ImageData
+				const pixels = new Uint8ClampedArray(display_texture_resolution * display_texture_resolution * 4);
+				gl.readPixels(0, 0, display_texture_resolution, display_texture_resolution,
+				    gl.RGBA, gl.UNSIGNED_BYTE,
+				    pixels);
+				const img = new ImageData(pixels, display_texture_resolution, display_texture_resolution);
+				displays[i].context.putImageData(img, 0, 0);
 			}
 			// Draw main view
 			render(gl, programInfo, objects);
