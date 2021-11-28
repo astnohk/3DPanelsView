@@ -10,12 +10,20 @@ body {
 	height: 100%;
 }
 
-#canvas_displays {
+#canvas_displays_frame {
 	//display: none;
 	position: absolute;
 	top: 0px;
 	left: 0px;
 	width: 0%;
 	height: 0%;
+}
+
+#canvas_displays {
+	position: relative;
+	display: inline-block;
+	padding: 5px;
+	padding-bottom: 0px;
+	background-color: rgba(128,48,48,0.4);
 }
 

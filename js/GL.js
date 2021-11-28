@@ -37,7 +37,8 @@ out vec4 fragmentColor;
 
 void main(void) {
 	if (max(abs(2.0 * vTextureCoord.x - 1.0), abs(2.0 * vTextureCoord.y - 1.0)) > 0.95) {
-		fragmentColor = vec4(0.1, 0.1, 0.1, 1.0);
+		// Draw the frame of the display
+		fragmentColor = vec4(0.2, 0.2, 0.2, 1.0);
 	} else {
 		fragmentColor = texture(uTexture, vTextureCoord.xy);
 	}
