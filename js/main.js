@@ -75,9 +75,9 @@ function init()
 		multiplyMat4(cube.modelMat, rot, cube.modelMat);
 		rot = createRotationMat4_x(Math.random() * Math.PI * 2.0);
 		multiplyMat4(cube.modelMat, rot, cube.modelMat);
-		cube.modelMat[12] = 4.0 * (Math.random() - 0.5);
-		cube.modelMat[13] = 4.0 * (Math.random() - 0.5);
-		cube.modelMat[14] = 4.0 * (Math.random() - 0.5);
+		cube.modelMat[12] = 4.0 * (2.0 * Math.random() - 1.0);
+		cube.modelMat[13] = 4.0 * (2.0 * Math.random() - 1.0);
+		cube.modelMat[14] = 4.0 * (2.0 * Math.random() - 1.0);
 		cubes.push(cube);
 	}
 

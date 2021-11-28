@@ -43,9 +43,9 @@ void main(void) {
 	vec3 dispPlane = cross(Y, X);
 	// Normalized position
 	float d = dot(dispPlane, dispos0);
-	if (dot(dispos0 + dispos1 + dispos3, dispPlane) < 0.0) {
+	if (dot(dispos0 + dispos1 + dispos3, dispPlane) < 0.0 || dot(pos.xyz, dispPlane) < 0.0) {
 		gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
-		vColor = vec4(0.0, 0.0, 0.0, 0.0);
+		vColor = vec4(0.0, 0.0, 0.0, -1.0);
 	} else {
 		vec3 pos_onPlane = pos.xyz * d / dot(pos.xyz, dispPlane);
 
@@ -54,7 +54,7 @@ void main(void) {
 		    2.0 * dot(pos_onPlane - dispos0, Y) / max(1.0E-9, length(dispos3 - dispos0)) - 1.0,
 		    -0.001 * pos.z,
 		    1.0);
-		vColor = aVertexColor;
+		vColor = vec4(aVertexColor.xyz, 0.0);
 	}
 }
 `;
@@ -64,10 +64,14 @@ const fs_projection =
 precision highp float;
 
 in lowp vec4 vColor;
+
 out vec4 fragmentColor;
 
 void main(void) {
-	fragmentColor = vColor;
+	if (vColor.w < 0.0) {
+		discard;
+	}
+	fragmentColor = vec4(vColor.xyz, 1.0);
 }
 `;
 
