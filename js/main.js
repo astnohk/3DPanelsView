@@ -8,9 +8,9 @@ let g_near = 0.1;
 let g_far = 1000.0;
 
 let rotx = 0.0;
-let roty = 0.0;
+let roty = 0.2;
 
-var cameraPosition = [ 0.0, 0.0, 5.0, 0.0 ];
+var cameraPosition = [ 0.0, 0.0, 12.0, 0.0 ];
 
 const display_texture_resolution = 1024;
 const display_positions = [
