@@ -43,17 +43,23 @@ void main(void) {
 	vec3 dispPlane = cross(Y, X);
 	// Normalized position
 	float d = dot(dispPlane, dispos0);
-	if (dot(dispos0 + dispos1 + dispos3, dispPlane) < 0.0 || dot(pos.xyz, dispPlane) < 0.0) {
+	if (dot(dispos0 + dispos1 + dispos3, dispPlane) < 0.0) {
+		// Shows only the camera is in front of displays
 		gl_Position = vec4(-2.0, -2.0, -2.0, 1.0);
 		vColor = vec4(0.0, 0.0, 0.0, -1.0);
 	} else {
-		vec3 pos_onPlane = pos.xyz * d / dot(pos.xyz, dispPlane);
+		// Calculate the projection point of the positional vector of the vertex.
+		// Limit the result of inner product of position and plane vector
+		// to avoid to the vertex being out of the display plane.
+		vec3 pos_onPlane = pos.xyz * d / max(0.0, dot(pos.xyz, dispPlane));
 
 		gl_Position = vec4(
 		    2.0 * dot(pos_onPlane - dispos0, X) / max(1.0E-9, length(dispos1 - dispos0)) - 1.0,
 		    2.0 * dot(pos_onPlane - dispos0, Y) / max(1.0E-9, length(dispos3 - dispos0)) - 1.0,
 		    -0.001 * pos.z,
 		    1.0);
+		// Use alpha == 0.0 to delete all vertexes connecting directly to
+		// vertexes eliminated by the condition above.
 		vColor = vec4(aVertexColor.xyz, 0.0);
 	}
 }
